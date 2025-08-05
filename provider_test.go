@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	zone = os.Getenv("ZONE")
 	testRecords = []libdns.Record{
 		libdns.TXT{
-			Name: "test." + zone,
+			Name: "test",
 			Text: "testval1",
 			TTL:  time.Duration(1200) * time.Second,
 		},
@@ -53,8 +53,8 @@ func cleanupRecords(t *testing.T, p *Provider, records []libdns.Record) {
 }
 
 func isSameRecord(a libdns.Record, b libdns.Record) bool {
-	rawa, _ := convertToConohaDNSRecord(a)
-	rawb, _ := convertToConohaDNSRecord(b)
+	rawa, _ := convertToConohaDNSRecord(a, zone)
+	rawb, _ := convertToConohaDNSRecord(b, zone)
 
 	// NOTE: We intentionally do not compare TTL values here.
 	// ConoHa's API does not consistently preserve or allow updates to TTL,
@@ -112,7 +112,7 @@ func TestProvider_SetProvider(t *testing.T) {
 	newTTL := 1200
 
 	for _, testRec := range testRecords {
-		rawRec, err := convertToConohaDNSRecord(testRec)
+		rawRec, err := convertToConohaDNSRecord(testRec, zone)
 		if err != nil {
 			t.Fatal(err)
 		}
