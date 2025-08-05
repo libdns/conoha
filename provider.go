@@ -89,7 +89,7 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 	}
 
 	for _, rec := range records {
-		rawRecord, err := convertToConohaDNSRecord(rec)
+		rawRecord, err := convertToConohaDNSRecord(rec, zone)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns
 	}
 
 	for _, rec := range records {
-		converted, err := convertToConohaDNSRecord(rec)
+		converted, err := convertToConohaDNSRecord(rec, zone)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []lib
 	}
 
 	for _, rec := range records {
-		converted, err := convertToConohaDNSRecord(rec)
+		converted, err := convertToConohaDNSRecord(rec, zone)
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +214,7 @@ func convertToLibdnsRecord(rec conohaDNSRecord) (libdns.Record, error) {
 }
 
 // convertToConohaDNSRecord converts a libdns.Record into a ConoHa-compatible raw Record struct.
-func convertToConohaDNSRecord(rec libdns.Record) (conohaDNSRecord, error) {
+func convertToConohaDNSRecord(rec libdns.Record, zone string) (conohaDNSRecord, error) {
 	rr := rec.RR()
 	parsed, err := rr.Parse()
 	if err != nil {
@@ -228,21 +228,21 @@ func convertToConohaDNSRecord(rec libdns.Record) (conohaDNSRecord, error) {
 	switch r := parsed.(type) {
 	case libdns.Address:
 		return conohaDNSRecord{
-			Name: r.Name,
+			Name: libdns.AbsoluteName(r.Name, zone),
 			Type: rr.Type,
 			Data: r.IP.String(),
 			TTL:  int(r.TTL.Seconds()),
 		}, nil
 	case libdns.CNAME:
 		return conohaDNSRecord{
-			Name: r.Name,
+			Name: libdns.AbsoluteName(r.Name, zone),
 			Type: rr.Type,
 			Data: r.Target,
 			TTL:  int(r.TTL.Seconds()),
 		}, nil
 	case libdns.TXT:
 		return conohaDNSRecord{
-			Name: r.Name,
+			Name: libdns.AbsoluteName(r.Name, zone),
 			Type: rr.Type,
 			Data: r.Text,
 			TTL:  int(r.TTL.Seconds()),
